@@ -3,7 +3,7 @@ import httpx
 import random
 
 app = FastAPI()
-failure_probability = 0.5  
+failure_probability = 0.5
 
 @app.get("/hello/")
 def hello():
