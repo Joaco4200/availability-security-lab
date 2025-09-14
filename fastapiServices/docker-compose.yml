@@ -10,15 +10,12 @@ services:
 
   service_b1:
     build: ./ServiceB
-    ports:
-      - "8001:8000"
+    
 
   service_b2:
     build: ./ServiceB
-    ports:
-      - "8002:8000"
+   
 
   service_b3:
     build: ./ServiceB
-    ports:
-      - "8003:8000"
+    
