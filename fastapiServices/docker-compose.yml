@@ -1,13 +1,24 @@
-version: "3.9"
 services:
   servicio_a:
     build: ./ServiceA
     ports:
       - "8000:8000"
     depends_on:
-      - servicio_b
+      - service_b1
+      - service_b2
+      - service_b3
 
-  servicio_b:
+  service_b1:
     build: ./ServiceB
     ports:
-      - "8001:8001"
+      - "8001:8000"
+
+  service_b2:
+    build: ./ServiceB
+    ports:
+      - "8002:8000"
+
+  service_b3:
+    build: ./ServiceB
+    ports:
+      - "8003:8000"
