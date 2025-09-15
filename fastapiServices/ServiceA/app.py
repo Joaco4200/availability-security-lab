@@ -17,8 +17,6 @@ replicas = [
     "http://service_b3:8001",
 ]
 
-MAX_RETRIES = 3
-
 # Tactica de seguridad: Autenticar actores
 # =============================================================================
 
@@ -188,12 +186,12 @@ async def validate_limit_endpoint(
 
 #Tactica de disponibilidad: replicacion
 # =============================================================================
-@app.get("/api/replicas")
+@app.get("/hello/replics")
 async def hello():
     errors = []
-    # replicas_shuffled = random.sample(replicas, len(replicas))
+    replicas_shuffled = random.sample(replicas, len(replicas))
     
-    for replica in replicas:
+    for replica in replicas_shuffled:
         logging.info(f"Trying replica {replica}")
         try:            
             async with httpx.AsyncClient(timeout=2.0) as client: #llamada http asincrona si demora mas de 2s falla.
@@ -207,22 +205,24 @@ async def hello():
                     logging.warning(f"Réplic {replica} responded with error: {resp_json}")
                     errors.append({replica: resp_json}) 
         finally:
-            await asyncio.sleep(1)  # delay entre intentos
+            await asyncio.sleep(7)  # delay entre intentos
 
+    print("All replicas failed")
     return {"error": "All replicas failed","attempted_replicas": errors}
+
 
 #Tactica de disponibilidad: re-intentos
 # =============================================================================
-@app.get("/api/retries")
-async def hello_retries():
-    tries = 0
-    for i in range(MAX_RETRIES):
+@app.get("/hello/retries")
+def hello_retries():
+    tries= 0
+    for i in range(20):
         tries +=1
         resp= httpx.get("http://service_b1:8001/hello/", timeout=2.0)
         
         if resp.status_code == 200 and "message" in resp.json():
             return {"response": resp.json(), "tries": tries}
-
-    return {"error": "All retries failed"}
+    
+    return "All retries failed"
 
 
