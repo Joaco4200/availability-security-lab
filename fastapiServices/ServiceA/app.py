@@ -1,6 +1,8 @@
 import re
-from fastapi import FastAPI, HTTPException, HTTPBasicCredentials, Depends, Optional, Dict, HTTPBasic, BaseModel, status
-from pydantic import Field
+from typing import Optional, Dict
+from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from pydantic import BaseModel, Field
 import httpx
 import asyncio
 import random
