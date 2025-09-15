@@ -186,7 +186,7 @@ async def validate_limit_endpoint(
 
 #Tactica de disponibilidad: replicacion
 # =============================================================================
-@app.get("/hello/replics")
+@app.get("/api/replicas")
 async def hello():
     errors = []
     replicas_shuffled = random.sample(replicas, len(replicas))
@@ -205,7 +205,7 @@ async def hello():
                     logging.warning(f"Réplic {replica} responded with error: {resp_json}")
                     errors.append({replica: resp_json}) 
         finally:
-            await asyncio.sleep(7)  # delay entre intentos
+            await asyncio.sleep(3)  
 
     print("All replicas failed")
     return {"error": "All replicas failed","attempted_replicas": errors}
@@ -213,10 +213,10 @@ async def hello():
 
 #Tactica de disponibilidad: re-intentos
 # =============================================================================
-@app.get("/hello/retries")
+@app.get("/api/retries")
 def hello_retries():
     tries= 0
-    for i in range(20):
+    for i in range(10):
         tries +=1
         resp= httpx.get("http://service_b1:8001/hello/", timeout=2.0)
         
