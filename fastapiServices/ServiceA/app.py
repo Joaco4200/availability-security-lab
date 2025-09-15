@@ -1,5 +1,6 @@
 import re
 from fastapi import FastAPI, HTTPException, HTTPBasicCredentials, Depends, Optional, Dict, HTTPBasic, BaseModel, status
+from pydantic import Field
 import httpx
 import asyncio
 import random
@@ -16,7 +17,7 @@ replicas = [
 
 MAX_RETRIES = 3
 
-# Tactica de seguridad 1: Autenticar actores
+# Tactica de seguridad: Autenticar actores
 # =============================================================================
 
 USER_DATABASE = {
@@ -104,6 +105,85 @@ async def verify_credentials(credentials: UserCredentials):
             detail="Credenciales inválidas"
         )
 
+# Tactica de seguridad: Validar la entrada
+# =============================================================================
+class MessageRequest(BaseModel):
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Mensaje (máximo 100 caracteres)"
+    )
+    priority: int = Field(
+        default=1,
+        ge=1,
+        le=3,
+        description="Prioridad del 1 al 3"
+    )
+    
+    def validate_message(self):
+        if not self.message or len(self.message.strip()) == 0:
+            raise ValueError('El mensaje no puede estar vacío')
+        
+        if '<' in self.message or '>' in self.message:
+            raise ValueError('El mensaje no puede contener < o >')
+        
+        return True
+
+def validate_limit(limit: int) -> bool:
+
+    if limit < 1 or limit > 20:
+        raise ValueError('El límite debe estar entre 1 y 20')
+
+    return True
+
+@app.post("/api/validate/message")
+async def validate_message_endpoint(
+        message_request: MessageRequest,
+        user_info: Dict[str, str] = Depends(authenticate_actor)
+    ):
+    try:
+        message_request.validate_message()
+        
+        return {
+            "status": "success",
+            "message": "Mensaje válido",
+            "validated_data": {
+                "message": message_request.message,
+                "priority": message_request.priority,
+                "message_length": len(message_request.message)
+            },
+            "user_info": user_info
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error de validación: {str(e)}"
+        )
+
+@app.get("/api/validate/limit/{limit}")
+async def validate_limit_endpoint(
+        limit: int,
+        user_info: Dict[str, str] = Depends(authenticate_actor)
+    ):
+    try:
+        is_valid = validate_limit(limit)
+        
+        return {
+            "status": "success",
+            "message": "Límite válido",
+            "validated_data": {
+                "limit": limit,
+                "is_valid": is_valid
+            },
+            "user_info": user_info
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error de validación: {str(e)}"
+        )
+
 #Tactica de disponibilidad: replicacion
 # =============================================================================
 @app.get("/api/replicas")
@@ -142,4 +222,5 @@ async def hello_retries():
             return {"response": resp.json(), "tries": tries}
 
     return {"error": "All retries failed"}
+
 
